@@ -1,0 +1,13 @@
+# Contexto permitido: apenas o pacote de código gerado e o Dockerfile.
+**
+!Dockerfile
+!Dockerfile.render
+!source/
+!source/pubspec.yaml
+!source/pubspec.lock
+!source/bin/
+!source/bin/servidor_banco.dart
+!source/bin/servidor_render.dart
+!source/lib/
+!source/lib/services/
+!source/lib/services/database_rpc_server.dart

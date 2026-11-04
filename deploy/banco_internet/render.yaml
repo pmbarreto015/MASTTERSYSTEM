@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: matterdi-banco
+    runtime: docker
+    plan: 0.5c-512mb
+    region: virginia
+    numInstances: 1
+    dockerfilePath: ./Dockerfile.render
+    dockerContext: .
+    autoDeployTrigger: off
+    # Sem healthCheckPath: o Render usa a verificação TCP.
+    # /health exige a chave do aplicativo e não serve como probe público.
+    envVars:
+      - key: MATTERDI_DATABASE_TOKEN
+        generateValue: true
+      - key: MATTERDI_DATABASE_PATH
+        value: /var/data/matterdi_sistem.db
+    disk:
+      name: matterdi-dados
+      mountPath: /var/data
+      sizeGB: 1

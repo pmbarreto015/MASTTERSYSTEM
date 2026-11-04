@@ -1,0 +1,21 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - build/**
+    - dist/**
+    - backup_antes_nota_fiscal_*/**
+    - lib/generated/**
+    - lib/**.freezed.dart
+    - lib/**.g.dart
+
+  errors:
+    unused_import: warning
+    unused_local_variable: warning
+    deprecated_member_use: warning
+    invalid_null_aware_operator: warning
+    unused_field: warning
+
+linter:
+  rules:
+    avoid_print: false

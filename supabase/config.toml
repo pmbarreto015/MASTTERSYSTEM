@@ -1,0 +1,6 @@
+project_id = "fxaktapjvbakbitsxbjl"
+
+[functions.matterdi-users]
+# O gateway valida o JWT antes da execucao. A funcao valida novamente a sessao
+# em /auth/v1/user e, depois, exige um perfil administrador ativo.
+verify_jwt = true

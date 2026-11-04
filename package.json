@@ -1,0 +1,11 @@
+{
+  "name": "matterdi-supabase-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:supabase": "node --test test/supabase/*.test.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.3.14"
+  }
+}

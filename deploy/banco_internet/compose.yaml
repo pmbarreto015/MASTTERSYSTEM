@@ -1,0 +1,68 @@
+name: matterdi-banco
+
+services:
+  banco:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        DART_IMAGE: ${DART_IMAGE:-dart:stable}
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 45s
+    command:
+      - --database
+      - /data/matterdi_sistem.db
+      - --bind
+      - 0.0.0.0
+      - --port
+      - "8080"
+      - --token-file
+      - /run/secrets/chave_banco
+    expose:
+      - "8080"
+    volumes:
+      - type: bind
+        source: ./data
+        target: /data
+        bind:
+          create_host_path: false
+    secrets:
+      - chave_banco
+    read_only: true
+    tmpfs:
+      - /tmp
+    networks:
+      - banco_interno
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - banco
+    environment:
+      DOMAIN: ${DOMAIN:?Defina DOMAIN no arquivo .env}
+      ACME_EMAIL: ${ACME_EMAIL:?Defina ACME_EMAIL no arquivo .env}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - banco_interno
+      - internet
+
+secrets:
+  chave_banco:
+    file: ./secrets/chave_banco
+
+networks:
+  banco_interno:
+    internal: true
+  internet:
+
+volumes:
+  caddy_data:
+  caddy_config:

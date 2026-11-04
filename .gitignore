@@ -1,0 +1,77 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.dart-tool-state/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/dist/
+/tmp/
+/output/
+/installer/
+/installer_output/
+/Sistema Finalizado/
+/data/
+/.vscode/
+/analyze*.txt
+/lib.rar
+/unins000.dat
+/unins000.exe
+/pubspec.yaml.bak
+/tool/gerador_licenca.exe
+/assets/admin_installers/*.apk
+/assets/admin_installers/*.zip
+
+# Chaves privadas de emissão e configurações do administrador
+/data/licensing/issuer_private.json
+/data/licensing/build_defines_admin.json
+/deploy/licensing/.env
+/backup_antes_nota_fiscal_*/
+/coverage/
+/node_modules/
+/.npm-cache/
+
+# Geração e configuração privada do servidor de banco na internet
+/dist/.banco-internet-*/
+/dist/MatterdiBancoInternet*/.env
+/dist/MatterdiBancoInternet*/data/*
+/dist/MatterdiBancoInternet*/secrets/*
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+/android/build/

@@ -1,0 +1,108 @@
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:flutter_tools/src/build_system/hash.dart';
+import 'package:path/path.dart' as p;
+
+String pathKey(String path) => p.normalize(path).toLowerCase();
+
+// Usa o mesmo algoritmo de cache do SDK que produziu os arquivos AOT.
+String fileHash(File file) {
+  final hash = Md5Hash();
+  final buffer = Uint8List(64 * 1024);
+  final input = file.openSync();
+  try {
+    while (true) {
+      final length = input.readIntoSync(buffer);
+      if (length == 0) break;
+      hash.addChunk(buffer, length);
+    }
+  } finally {
+    input.closeSync();
+  }
+  return hash
+      .finalize()
+      .buffer
+      .asUint8List()
+      .map((b) => b.toRadixString(16).padLeft(2, '0'))
+      .join();
+}
+
+void main(List<String> args) {
+  if (args.length != 1 || !RegExp(r'^[a-fA-F0-9]{32}$').hasMatch(args.single)) {
+    stderr.writeln(
+      'Informe somente o ID de 32 caracteres hexadecimais do cache AOT.',
+    );
+    exitCode = 2;
+    return;
+  }
+  final root = Directory.current.absolute.path;
+  final cacheId = args.single.toLowerCase();
+  final candidate = Directory(p.join(root, '.dart_tool', 'flutter_build', cacheId));
+  try {
+    final data = jsonDecode(File('${candidate.path}/.filecache').readAsStringSync())
+        as Map<String, dynamic>;
+    final hashes = <String, String>{
+      for (final item in data['files'] as List)
+        pathKey(item['path'] as String): item['hash'] as String,
+    };
+    final checked = <String, String>{};
+    String digest(String path) =>
+        checked.putIfAbsent(pathKey(path), () => fileHash(File(path)));
+    final stamps = [
+      'kernel_snapshot_program',
+      'android_aot_release_android-arm',
+      'android_aot_release_android-arm64',
+      'android_aot_release_android-x64',
+      'aot_android_asset_bundle',
+    ];
+    for (final stamp in stamps) {
+      final state = jsonDecode(
+        File('${candidate.path}/$stamp.stamp').readAsStringSync(),
+      ) as Map<String, dynamic>;
+      for (final path in [
+        ...state['inputs'] as List,
+        ...state['outputs'] as List,
+      ].cast<String>()) {
+        if (path.contains('DOES_NOT_EXIST_RERUN_FOR_WILDCARD') &&
+            !File(path).existsSync()) {
+          continue;
+        }
+        // O cliente usa este placeholder enquanto os instaladores originais
+        // ficam separados. Depois de restaura-los, confira a copia compilada.
+        if (pathKey(path) == pathKey('$root/assets/admin_installers/LEIA-ME.txt') &&
+            !File(path).existsSync()) {
+          final bundled = '$root/build/app/intermediates/flutter/release/flutter_assets/assets/admin_installers/LEIA-ME.txt';
+          if (File(bundled).existsSync() && digest(bundled) == hashes[pathKey(path)]) {
+            continue;
+          }
+        }
+        if (!File(path).existsSync() || digest(path) != hashes[pathKey(path)]) {
+          throw StateError('Arquivo divergente: $path');
+        }
+      }
+    }
+    final gate =
+        File('$root/lib/screens/auth/license_access_gate.dart').absolute.path;
+    if (hashes[pathKey(gate)] != digest(gate)) {
+      throw StateError('Correcao de retorno ausente no cache.');
+    }
+    for (final abi in ['armeabi-v7a', 'arm64-v8a', 'x86_64']) {
+      if (digest('${candidate.path}/$abi/app.so') !=
+          digest('$root/build/app/intermediates/flutter/release/$abi/app.so')) {
+        throw StateError('AOT intermediario divergente: $abi');
+      }
+    }
+    stdout.writeln(
+      'AOT $cacheId e recursos conferidos com o SDK: ${checked.length} arquivos; '
+      'tres arquiteturas e correcao de retorno presentes.',
+    );
+  } catch (error) {
+    stderr.writeln(
+      'O AOT selecionado nao corresponde integralmente ao codigo atual.\n'
+      '${candidate.path}: $error',
+    );
+    exitCode = 1;
+  }
+}

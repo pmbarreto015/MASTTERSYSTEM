@@ -1,0 +1,13 @@
+.env
+.dart_tool/
+**/.dart_tool/
+local-runtime/
+data/*
+!data/README.md
+secrets/*
+!secrets/README.md
+*.db
+*.db-*
+*.incoming
+*.backup
+*.zip

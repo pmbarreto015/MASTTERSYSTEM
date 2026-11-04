@@ -1,0 +1,23 @@
+# syntax=docker/dockerfile:1
+ARG DART_IMAGE=dart:stable
+FROM ${DART_IMAGE} AS build
+WORKDIR /build
+COPY source/pubspec.* ./
+RUN dart pub get
+COPY source/bin/ ./bin/
+COPY source/lib/ ./lib/
+RUN dart build cli --target=bin/servidor_render.dart --output=output
+
+# Mantém shell e utilitários para importar o banco pelo SSH gerenciado do Render.
+FROM ${DART_IMAGE} AS runtime
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates openssh-client openssh-sftp-server sqlite3 openssl \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /root/.ssh \
+    && chmod 0700 /root/.ssh \
+    && usermod --password "$(openssl rand -base64 48 | openssl passwd -6 -stdin)" root
+COPY --from=build /build/output/bundle/ /app/
+WORKDIR /app
+ENV MATTERDI_DATABASE_PATH=/var/data/matterdi_sistem.db
+EXPOSE 10000
+ENTRYPOINT ["/app/bin/servidor_render"]

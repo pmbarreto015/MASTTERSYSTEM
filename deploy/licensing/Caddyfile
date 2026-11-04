@@ -1,0 +1,6 @@
+{$LICENSE_DOMAIN} {
+    request_body {
+        max_size 32KB
+    }
+    reverse_proxy licenses:8787
+}
